@@ -71,9 +71,11 @@ int main() {
     for(int i = 0; i < 10; i++)
     {
         // data = 0;
+        float* ptr =  reinterpret_cast<float*>(std::aligned_alloc(64, data.size() * sizeof(data_type)));
+        memset(ptr, 0, data.size() * sizeof(data_type));
         auto start = std::chrono::high_resolution_clock::now();
         // const hn::ScalableTag<data_type> d;
-        float* ptr =  reinterpret_cast<float*>(std::aligned_alloc(64, data.size() * sizeof(data_type)));
+        
         project::CallAddLoop(ptr, data.size());
         // auto ptr = data.begin();
         // for (size_t i = 0; i < data.size(); i += hn::Lanes(d)) {
@@ -83,6 +85,7 @@ int main() {
         // }
         auto stop = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<microseconds>(stop - start);
+        std::free(ptr);
         std::chrono::duration<double> t = stop - start;
         fmt::print("Simd: {} microseconds {:.1f} GB/s\n", duration.count(), frame_size_GB/t.count());
         fmt::print("First element: {}\n", data(0, 0));
