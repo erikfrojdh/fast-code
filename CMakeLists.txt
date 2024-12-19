@@ -15,6 +15,7 @@ set(ExampleSrc
     # 00-RowVsCol.cpp
     01-AddingWork.cpp
     02-BranchPredictor.cpp
+    03-Pedestal.cpp
 )
 
 find_package(hwy REQUIRED)
@@ -24,7 +25,7 @@ foreach(FILE ${ExampleSrc})
     get_filename_component(EXENAME ${FILE} NAME_WE)
     add_executable(${EXENAME} ${FILE})
     # target_compile_options(${EXENAME} PRIVATE -mavx -mavx2 -maes)
-    target_link_libraries(${EXENAME}  aare_core benchmark::benchmark hwy::hwy)
+    target_link_libraries(${EXENAME}  aare_core benchmark::benchmark hwy::hwy fmt::fmt)
     set_target_properties(${EXENAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 endforeach()
 
