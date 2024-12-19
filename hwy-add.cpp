@@ -16,7 +16,7 @@ using T = float;
 
 // Alternative to per-function HWY_ATTR: see HWY_BEFORE_NAMESPACE
 HWY_ATTR void AddLoop(T* HWY_RESTRICT arr,
-                const size_t size) {
+                size_t size) {
   const hn::ScalableTag<T> d;
   fmt::print("Lanes: {}\n", hn::Lanes(d));
   for (size_t i = 0; i < size; i += hn::Lanes(d)) {
@@ -42,7 +42,7 @@ namespace project {
 HWY_EXPORT(AddLoop);
 
 void CallAddLoop(float* HWY_RESTRICT arr,
-                const size_t size) {
+                size_t size) {
   // This must reside outside of HWY_NAMESPACE because it references (calls the
   // appropriate one from) the per-target implementations there.
   // For static dispatch, use HWY_STATIC_DISPATCH.

@@ -4,6 +4,7 @@
 #include "aare/NDArray.hpp"
 
 #include <hwy/highway.h>
+
 namespace hn = hwy::HWY_NAMESPACE;
 
 namespace project{
@@ -72,8 +73,8 @@ int main() {
         // data = 0;
         auto start = std::chrono::high_resolution_clock::now();
         // const hn::ScalableTag<data_type> d;
-        
-        project::CallAddLoop(data.data(), data.size());
+        float* ptr =  reinterpret_cast<float*>(std::aligned_alloc(64, data.size() * sizeof(data_type)));
+        project::CallAddLoop(ptr, data.size());
         // auto ptr = data.begin();
         // for (size_t i = 0; i < data.size(); i += hn::Lanes(d)) {
         //     auto x = hn::Load(d, ptr + i);
