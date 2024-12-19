@@ -12,18 +12,17 @@ namespace HWY_NAMESPACE {  // required: unique per target
 // Can skip hn:: prefixes if already inside hwy::HWY_NAMESPACE.
 namespace hn = hwy::HWY_NAMESPACE;
 
-using T = float;
+using T = int;
 
 // Alternative to per-function HWY_ATTR: see HWY_BEFORE_NAMESPACE
 HWY_ATTR void AddLoop(T* HWY_RESTRICT arr,
                 size_t size) {
   const hn::ScalableTag<T> d;
-  fmt::print("Lanes: {}\n", hn::Lanes(d));
-  for (size_t i = 0; i < size; i += hn::Lanes(d)) {
-
-    auto x = hn::Load(d, arr + i);
+//   fmt::print("Lanes: {}\n", hn::Lanes(d));
+  for (size_t i = 0; i+hn::Lanes(d) < size; i += hn::Lanes(d)) {
+    auto x = hn::LoadU(d, arr + i);
     x = hn::Add(x, hn::Set(d, 1.0));
-    hn::Store(x, d, arr + i);
+    hn::StoreU(x, d, arr + i);
   }
 }
 
@@ -41,7 +40,7 @@ namespace project {
 // This macro declares a static array used for dynamic dispatch.
 HWY_EXPORT(AddLoop);
 
-void CallAddLoop(float* HWY_RESTRICT arr,
+void CallAddLoop(int* HWY_RESTRICT arr,
                 size_t size) {
   // This must reside outside of HWY_NAMESPACE because it references (calls the
   // appropriate one from) the per-target implementations there.
