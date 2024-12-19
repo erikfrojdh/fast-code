@@ -12,7 +12,7 @@ find_package(benchmark REQUIRED)
 
 #List of examples to be compiled
 set(ExampleSrc
-    00-RowVsCol.cpp
+    # 00-RowVsCol.cpp
     01-AddingWork.cpp
     02-BranchPredictor.cpp
 )
@@ -23,9 +23,16 @@ find_package(hwy REQUIRED)
 foreach(FILE ${ExampleSrc})
     get_filename_component(EXENAME ${FILE} NAME_WE)
     add_executable(${EXENAME} ${FILE})
+    # target_compile_options(${EXENAME} PRIVATE -mavx -mavx2 -maes)
     target_link_libraries(${EXENAME}  aare_core benchmark::benchmark hwy::hwy)
     set_target_properties(${EXENAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 endforeach()
+
+
+add_executable(00-RowVsCol 00-RowVsCol.cpp hwy-add.cpp)
+target_link_libraries(00-RowVsCol  aare_core benchmark::benchmark hwy::hwy)
+target_include_directories(00-RowVsCol PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+set_target_properties(00-RowVsCol PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 
 #Some examples require ROOT. Only enable them if the user requests it

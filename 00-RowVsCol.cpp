@@ -6,20 +6,10 @@
 #include <hwy/highway.h>
 namespace hn = hwy::HWY_NAMESPACE;
 
-// using T = float;
-
-// void AddLoop(const T* HWY_RESTRICT array,
-//                 const T& value) {
-//   const hn::ScalableTag<T> d;
-//   for (size_t i = 0; i < size; i += hn::Lanes(d)) {
-//     const auto mul = hn::Load(d, mul_array + i);
-//     const auto add = hn::Load(d, add_array + i);
-//     auto x = hn::Load(d, array + i);
-//     x = hn::Add(mul, x, add);
-//     hn::Store(x, d, x_array + i);
-//   }
-// }
-
+namespace project{
+    void CallAddLoop(float* HWY_RESTRICT arr,
+                const size_t size);
+}
 
 int main() {
     using std::chrono::microseconds;
@@ -77,18 +67,19 @@ int main() {
         std::chrono::duration<double> t = stop - start;
         fmt::print("Memset: {} microseconds {:.1f} GB/s\n", duration.count(), frame_size_GB/t.count());
     }
-    for(int i = 0; i < 3; i++)
+    for(int i = 0; i < 10; i++)
     {
-        data = 0;
+        // data = 0;
         auto start = std::chrono::high_resolution_clock::now();
-        const hn::ScalableTag<data_type> d;
-        fmt::print("Lanes: {}\n", hn::Lanes(d));
-        auto ptr = data.begin();
-        for (size_t i = 0; i < data.size(); i += hn::Lanes(d)) {
-            auto x = hn::Load(d, ptr + i);
-            x = hn::Add(x, hn::Set(d, 1.0));
-            hn::Store(x, d, ptr + i);
-        }
+        // const hn::ScalableTag<data_type> d;
+        
+        project::CallAddLoop(data.data(), data.size());
+        // auto ptr = data.begin();
+        // for (size_t i = 0; i < data.size(); i += hn::Lanes(d)) {
+        //     auto x = hn::Load(d, ptr + i);
+        //     x = hn::Add(x, hn::Set(d, 1.0));
+        //     hn::Store(x, d, ptr + i);
+        // }
         auto stop = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<microseconds>(stop - start);
         std::chrono::duration<double> t = stop - start;
