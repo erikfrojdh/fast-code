@@ -16,7 +16,19 @@ set(ExampleSrc
     01-AddingWork.cpp
     02-BranchPredictor.cpp
     03-Pedestal.cpp
+    04-CacheLine.cpp
 )
+# List of python files to be copied to the build directory
+set( PYTHON_FILES
+    pedestal.py
+)
+
+# Copy the python files to the build directory
+foreach(FILE ${PYTHON_FILES})
+    configure_file(${FILE} ${CMAKE_BINARY_DIR}/${FILE}  )
+endforeach(FILE ${PYTHON_FILES})
+
+
 
 find_package(hwy REQUIRED)
 

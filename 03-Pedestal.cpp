@@ -8,20 +8,29 @@
 #include <semaphore>
 #include <thread>
 
+#include "helper.hpp"
+
 double frame_size_GB = 400 * 400 * 2 / 1e9;
 
 void read_compute(const std::filesystem::path &fname, ssize_t n_frames) {
-
     fmt::print("\nRead compute\n");
     auto t0 = std::chrono::high_resolution_clock::now();
+
+    // allocate a 3D array to hold the data
     aare::NDArray<uint16_t, 3> data({n_frames, 400, 400});
+    
+    // open file for reading
     aare::File f(fname);
+
+    // Time the read 
     auto start = std::chrono::high_resolution_clock::now();
     f.read_into(data.buffer(), n_frames);
     auto stop = std::chrono::high_resolution_clock::now();
+    
     std::chrono::duration<double> t = stop - start;
     fmt::print("Reading {} frames took {:.3f} seconds\n", n_frames, t.count());
-
+    
+    // Accumulate the data in a 2D array
     start = std::chrono::high_resolution_clock::now();
     aare::NDArray<uint64_t, 2> total({400, 400}, uint64_t{0});
     for (size_t frame = 0; frame < n_frames; frame++) {
@@ -31,6 +40,8 @@ void read_compute(const std::filesystem::path &fname, ssize_t n_frames) {
             }
         }
     }
+
+    // Calculate the pedestal by dividing the total by the number of frames
     aare::NDArray<float, 2> pd({400, 400});
     for (size_t row = 0; row < 400; row++) {
         for (size_t col = 0; col < 400; col++) {
@@ -38,6 +49,7 @@ void read_compute(const std::filesystem::path &fname, ssize_t n_frames) {
         }
     }
 
+    // Print some statistics
     stop = std::chrono::high_resolution_clock::now();
     t = stop - start;
     fmt::print("Calculating pd from {} frames took {:.3f} seconds\n", n_frames,
@@ -199,6 +211,21 @@ auto only_read(const std::filesystem::path &fname, ssize_t n_frames) {
     return tt;
 }
 
+auto only_read_large_arr(const std::filesystem::path &fname, ssize_t n_frames) {
+    fmt::print("\nRead the data into a large buffer\n");
+    auto t0 = std::chrono::high_resolution_clock::now();
+    std::ifstream f(fname, std::ios::binary);
+    constexpr size_t frame_size = 400 * 400 * 2+112;
+    char* buf = new char[frame_size*n_frames];
+    f.read(buf, frame_size*n_frames);
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto tt = std::chrono::duration<double>(stop - t0).count();
+    fmt::print("Total time: {:.3f} seconds. Processed: {:.2f} GB/s\n", tt,
+               frame_size_GB * n_frames / tt);
+    delete[] buf;
+    return tt;
+}
+
 int main() {
 
     constexpr ssize_t n_frames = 10000;
@@ -209,31 +236,28 @@ int main() {
     std::filesystem::path raw =
         "/Users/erik/data/Moench03new/cu_half_speed_d0_f0_4.raw";
 
-    read_compute(fname, n_frames);
-    integrated(fname, n_frames);
+    // read_compute(fname, n_frames);
+    // integrated(fname, n_frames);
     // reordered(fname, n_frames);
     // two_threads(fname, n_frames);
     // only_read(raw, n_frames);
+    only_read_large_arr(raw, n_frames);
 
 
-    // std::vector<double> v;
-    // std::vector<double> v2;
-    // for(size_t i = 0; i < 3; i++)
-    // {
-    //     v.push_back(only_read(raw, n_frames));
-    //     v2.push_back(two_threads(fname, n_frames));
+    std::vector<double> v;
+    std::vector<double> v2;
+    for(size_t i = 0; i < 3; i++)
+    {
+        v.push_back(only_read(raw, n_frames));
+        v2.push_back(two_threads(fname, n_frames));
         
-    // }
-    // auto mean = std::accumulate(v.begin(), v.end(), 0.0) / v.size();
-    // auto sq_sum = std::inner_product(v.begin(), v.end(), v.begin(), 0.0);
-    // auto stdev = std::sqrt(sq_sum / v.size() - mean * mean);
-    // fmt::print("Reading data: {:.3f}s std: {:.3f}s\n", mean, stdev);
+    }
+    auto [m, s] = mean_std(v);
+    fmt::print("Reading data: {:.3f}s std: {:.3f}s\n", m, s);
 
-    // auto mean2 = std::accumulate(v2.begin(), v2.end(), 0.0) / v2.size();
-    // auto sq_sum2 = std::inner_product(v2.begin(), v2.end(), v2.begin(), 0.0);
-    // auto stdev2 = std::sqrt(sq_sum / v2.size() - mean * mean);
-    // fmt::print("Read and calculate: {:.3f}s std: {:.3f}s\n", mean2, stdev2);
-    // fmt::print("Difference: {:.3f}s, relative: {:.3f}\n", mean2 - mean, mean2 / mean);
+    auto [m2, s2] = mean_std(v2);
+    fmt::print("Read and calculate: {:.3f}s std: {:.3f}s\n", m2, s2);
+    fmt::print("Difference: {:.3f}s, relative: {:.3f}\n", m2 - m, m2 / m);
 
     
     // reordered(fname, n_frames);
